@@ -1,0 +1,81 @@
+import xmltodict
+import csv
+import fileinput
+import requests
+import os, shutil
+
+url = 'https://b2b.primaline.si/export/ligermv'
+r = requests.get(url)
+
+with open('ligermv.xml', 'wb') as f:
+    f.write(r.content)
+
+# prebere xml datoteko
+with open("ligermv.xml") as file:
+    filedata = file.read()
+    
+# pretvori xml v python dict    
+data_dict = xmltodict.parse(filedata)
+
+# naredi seznam parsed data
+seznam_artiklov = [dict(x) for x in data_dict["podjetje"]["izdelki"]["izdelek"]]
+
+# izbira naslovov celic za csv
+HEADERS = ['Naziv', 'Opis', 'Slike', 'Redna cena', 'Zaloga', 'EAN' ,'sku']
+rows = []
+
+# indeksiranje csv
+for izdelek in seznam_artiklov:
+    izdelekIme = izdelek["izdelekIme"]
+    Opis = izdelek["opis"]
+    slikaVelika = izdelek["slikaVelika"]
+    PPC = izdelek["PPC"]
+    dobava = izdelek["dobava"]
+    if dobava["#text"] == "ni na zalogi":
+        dobava = 0
+    else:
+        dobava = 100
+    if "EAN" in izdelek:
+        EAN = izdelek["EAN"]
+    else:
+        EAN = ""
+    sku = izdelek["sku"]
+
+# dodajanje podatkov v csv
+    rows.append([izdelekIme,Opis,slikaVelika,PPC,dobava,EAN,sku])
+
+#pisanje csv
+with open('primaline_store.csv', 'w',newline="", encoding='utf-8') as f:
+    write = csv.writer(f)
+    write.writerow(HEADERS)
+    write.writerows(rows)
+
+#sprememba stringov
+with fileinput.FileInput("primaline_store.csv", inplace=True) as file:
+    for line in file:
+        print(line.replace('&scaron;', 'š'), end='')
+
+#brisanje xml fajla
+myfile = "ligermv.xml"
+#če datoteka obstaja jo brisi
+if os.path.isfile(myfile):
+    os.remove(myfile)
+else:
+    # ce ne moc brisati obvesti.
+    print("Napaka: %s datoteka ne obstaja" % myfile)
+
+source = "/Matej dokumenti/Woocommerceuvoz/primaline_store.csv"
+destination = "C:/Users/Matej/OneDrive - Primaline d.o.o/Namizje/primaline_store.csv"
+ 
+try:
+    shutil.copy(source, destination)
+    print("Uspesno sem kopiral.")
+
+#brisanje xml fajla
+myfile = "/Matej dokumenti/Woocommerceuvoz/primaline_store.csv"
+# If file exists, delete it.
+if os.path.isfile(myfile):
+    os.remove(myfile)
+else:
+    # If it fails, inform the user.
+    print("Napaka: %s datoteka ne obstaja" % myfile)
