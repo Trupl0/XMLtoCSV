@@ -4,14 +4,16 @@ import fileinput
 import requests
 import os, shutil
 
-url = 'https://b2b.primaline.si/export/ligermv'
+#vnesi URL do XML povezave
+url = ''
 r = requests.get(url)
 
-with open('ligermv.xml', 'wb') as f:
+#odpri xml datoteko *
+with open('*.xml', 'wb') as f:
     f.write(r.content)
 
 # prebere xml datoteko
-with open("ligermv.xml") as file:
+with open("*.xml") as file:
     filedata = file.read()
     
 # pretvori xml v python dict    
@@ -45,18 +47,18 @@ for izdelek in seznam_artiklov:
     rows.append([izdelekIme,Opis,slikaVelika,PPC,dobava,EAN,sku])
 
 #pisanje csv
-with open('primaline_store.csv', 'w',newline="", encoding='utf-8') as f:
+with open('store.csv', 'w',newline="", encoding='utf-8') as f:
     write = csv.writer(f)
     write.writerow(HEADERS)
     write.writerows(rows)
 
 #sprememba stringov
-with fileinput.FileInput("primaline_store.csv", inplace=True) as file:
+with fileinput.FileInput("store.csv", inplace=True) as file:
     for line in file:
         print(line.replace('&scaron;', 'š'), end='')
 
 #brisanje xml fajla
-myfile = "ligermv.xml"
+myfile = "*.xml"
 #če datoteka obstaja jo brisi
 if os.path.isfile(myfile):
     os.remove(myfile)
@@ -64,15 +66,8 @@ else:
     # ce ne moc brisati obvesti.
     print("Napaka: %s datoteka ne obstaja" % myfile)
 
-source = "/Matej dokumenti/Woocommerceuvoz/primaline_store.csv"
-destination = "C:/Users/Matej/OneDrive - Primaline d.o.o/Namizje/primaline_store.csv"
- 
-try:
-    shutil.copy(source, destination)
-    print("Uspesno sem kopiral.")
-
-#brisanje xml fajla
-myfile = "/Matej dokumenti/Woocommerceuvoz/primaline_store.csv"
+#brisanje csv fajla
+myfile = "store.csv"
 # If file exists, delete it.
 if os.path.isfile(myfile):
     os.remove(myfile)
